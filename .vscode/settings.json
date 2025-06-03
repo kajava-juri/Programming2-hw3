@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "db.h": "c"
+        "db.h": "c",
+        "inttypes.h": "c",
+        "product.h": "c"
     }
 }

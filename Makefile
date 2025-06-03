@@ -14,20 +14,19 @@ LDFLAGS = -lsqlite3
 BUILD_DIR = build
 TARGET = $(BUILD_DIR)/hw3
 
-# Find all .c files in current directory and subdirectories
 SRCS := $(shell find ./ -name '*.c')
-# Extract just filenames (without paths) and put in BUILD_DIR
 OBJS := $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.c=.o)))
+
+# Tell Make where to find .c files
+vpath %.c . ./db_api
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-# This is the tricky part - we need to find the source file for each object
-$(BUILD_DIR)/%.o: | $(BUILD_DIR)
-	$(eval SRC_FILE := $(shell find ./ -name '$(patsubst %.o,%.c,$(notdir $@))'))
-	$(CC) $(CFLAGS) -c $(SRC_FILE) -o $@
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)

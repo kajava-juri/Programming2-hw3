@@ -21,11 +21,11 @@ void db_init(sqlite3 **pdb) {
     }
 
     // Test db connection
-    char buffer[256];
+    char buffer[256] = {0};
     sqlite3_stmt *stmt;
-    if (sqlite3_prepare_v2(*pdb, "SELECT 1;", -1, &stmt, NULL) == SQLITE_OK) {
-        if (sqlite3_step(stmt) == SQLITE_DONE) {
-            const unsigned char *text = sqlite3_column_text(stmt, 0);
+    if (sqlite3_prepare_v2(*pdb, "PRAGMA database_list;", -1, &stmt, NULL) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            const unsigned char *text = sqlite3_column_text(stmt, 1);
             if (text) strcpy(buffer, (const char*)text);
         }
         int rs = sqlite3_finalize(stmt);
@@ -41,6 +41,55 @@ void db_init(sqlite3 **pdb) {
         sqlite3_close(*pdb);
         exit(EXIT_FAILURE);
     }
-    printf("Test query output: %s\n", buffer);
     printf("Database opened successfully in read/write mode.\n");
+    printf("Database name: '%s'\n", buffer);
+}
+
+/**
+ * @brief Frees resources associated with a wrapper object.
+ *
+ * This function deallocates memory and releases any resources that were
+ * allocated by the wrapper.
+ *
+ * @param wrapper Pointer to the wrapper object to be freed.
+ * @return void
+ */
+void FreeWrapper(GenericWrapper *wrapper)
+{
+    if (wrapper == NULL)
+    {
+        return;
+    }
+    if (wrapper->data != NULL)
+    {
+        if (wrapper->freeData != NULL)
+        {
+            for (size_t i = 0; i < wrapper->used; i++)
+            {
+                // get the data pointer at index i for the unknown type
+                void *pData = wrapper->getElementAt(wrapper, i);
+                // continue if pData is NULL
+                if (pData == NULL)
+                {
+                    continue;
+                }
+
+                // call the struct specific memory deallocation function
+                wrapper->freeData(pData);
+            }
+        }
+        // free the data pointer itself
+        FreeMemory(&wrapper->data);
+    }
+    wrapper->size = 0;
+    wrapper->used = 0;
+    wrapper->limit = 0;
+
+}
+
+void FreeMemory(void **p) {
+    if (*p) {
+        free(*p);
+        *p = NULL;
+    }
 }
