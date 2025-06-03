@@ -24,10 +24,20 @@ typedef struct {
  *  - or an error code if the query failed.
  */
 int GetProduct(sqlite3 *db, Product *product);
-int PromptUserForProduct(sqlite3 *db, Product *product);
+
+/**
+ * @brief Convenience function to retrieve a product by its ID. Note that it uses GetProduct internally.
+ * @param db Pointer to the SQLite database connection.
+ * @param productId The ID of the product to retrieve.
+ * @param product Pointer to a Product structure that will be filled with the retrieved data.
+ */
+int GetProductById(sqlite3 *db, int productId, Product *product);
+int GetMatchedProducts(sqlite3 *db, Product *searchProduct, GenericWrapper *productWrapper);
+int PromptUserForProduct(sqlite3 *db, GenericWrapper *productWrapper, Product **outProduct);
 void FreeProduct(void **pProduct);
 void *GetProductAt(void *pWrapper, size_t index);
 void InitProductWrapper(GenericWrapper *wrapper);
 void FreeProduct(void **pProduct);
+void PrintProduct(Product *product);
 
 #endif // PRODUCT_H

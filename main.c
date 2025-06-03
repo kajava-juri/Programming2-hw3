@@ -8,7 +8,8 @@
 #include "main.h"
 #include "menu.h"
 
-int main(void) {
+int main(void)
+{
 
     sqlite3 *db = NULL;
     db_init(&db);
@@ -22,25 +23,23 @@ int main(void) {
         case 1:
             Product product = {
                 .id = 0, // Assuming 0 means no specific ID
-                .name = {0} // Initialize name to an empty string
-            };
+                .name = {0}};
             GenericWrapper pw;
-            Product *products = NULL;
             InitProductWrapper(&pw);
-            PromptUserForProduct(db, &product);
-            //CreateOrder(&db);
+            PromptUserForProduct(db, &pw, &product);
+            // CreateOrder(&db);
             break;
-        
+
         case 2:
-            
+
             break;
-            
+
         case 3:
-            
+
             break;
-            
+
         default:
-            
+
             break;
         }
     }

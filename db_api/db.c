@@ -4,9 +4,11 @@
 #include <string.h>
 #include "db.h"
 
-void db_init(sqlite3 **pdb) {
+void db_init(sqlite3 **pdb)
+{
     int conn = sqlite3_open_v2("shop2.db", pdb, SQLITE_OPEN_READWRITE, NULL);
-    if (conn != SQLITE_OK) {
+    if (conn != SQLITE_OK)
+    {
         fprintf(stderr, "Error opening database: %s\n", sqlite3_errmsg(*pdb));
         sqlite3_close(*pdb);
         exit(EXIT_FAILURE);
@@ -14,7 +16,8 @@ void db_init(sqlite3 **pdb) {
 
     // If database could not be opened in read/write mode, it tries to open it in read-only mode
     // we do not want that so check if it is opened in read/write mode
-    if(sqlite3_db_readonly(*pdb, "main") != 0) {
+    if (sqlite3_db_readonly(*pdb, "main") != 0)
+    {
         fprintf(stderr, "Could not open database in read/write mode: %s\n", sqlite3_errmsg(*pdb));
         sqlite3_close(*pdb);
         exit(EXIT_FAILURE);
@@ -23,26 +26,38 @@ void db_init(sqlite3 **pdb) {
     // Test db connection
     char buffer[256] = {0};
     sqlite3_stmt *stmt;
-    if (sqlite3_prepare_v2(*pdb, "PRAGMA database_list;", -1, &stmt, NULL) == SQLITE_OK) {
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
+    if (sqlite3_prepare_v2(*pdb, "PRAGMA database_list;", -1, &stmt, NULL) == SQLITE_OK)
+    {
+        if (sqlite3_step(stmt) == SQLITE_ROW)
+        {
             const unsigned char *text = sqlite3_column_text(stmt, 1);
-            if (text) strcpy(buffer, (const char*)text);
+            if (text)
+                strcpy(buffer, (const char *)text);
         }
         int rs = sqlite3_finalize(stmt);
-        if(rs != SQLITE_OK) {
+        if (rs != SQLITE_OK)
+        {
             fprintf(stderr, "Error finalizing statement: %s\n", sqlite3_errstr(rs));
             sqlite3_close(*pdb);
             exit(EXIT_FAILURE);
         }
-        
     }
-    if (sqlite3_errcode(*pdb) != SQLITE_OK) {
+    if (sqlite3_errcode(*pdb) != SQLITE_OK)
+    {
         fprintf(stderr, "Error executing test query: %s\n", sqlite3_errmsg(*pdb));
         sqlite3_close(*pdb);
         exit(EXIT_FAILURE);
     }
     printf("Database opened successfully in read/write mode.\n");
     printf("Database name: '%s'\n", buffer);
+}
+
+void EditOrder(sqlite3 *db)
+{
+    Product product = {
+        .id = 0, // Assuming 0 means no specific ID
+        .name = {0}};
+    GenericWrapper pw;
 }
 
 /**
@@ -84,11 +99,12 @@ void FreeWrapper(GenericWrapper *wrapper)
     wrapper->size = 0;
     wrapper->used = 0;
     wrapper->limit = 0;
-
 }
 
-void FreeMemory(void **p) {
-    if (*p) {
+void FreeMemory(void **p)
+{
+    if (*p)
+    {
         free(*p);
         *p = NULL;
     }

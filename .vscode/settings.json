@@ -2,6 +2,7 @@
     "files.associations": {
         "db.h": "c",
         "inttypes.h": "c",
-        "product.h": "c"
+        "product.h": "c",
+        "typeinfo": "c"
     }
 }
