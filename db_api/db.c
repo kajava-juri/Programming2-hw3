@@ -1,6 +1,7 @@
 #include <sqlite3.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "db.h"
 
 void db_init(sqlite3 **pdb) {
