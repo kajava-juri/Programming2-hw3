@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sqlite3.h>
-#include "db.h"
+#include "db_api/db.h"
 #include "main.h"
 
 int main(void) {

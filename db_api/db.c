@@ -20,11 +20,26 @@ void db_init(sqlite3 **pdb) {
     }
 
     // Test db connection
-    sqlite3_exec(*pdb, "SELECT 1;", NULL, NULL, NULL);
+    char buffer[256];
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(*pdb, "SELECT 1;", -1, &stmt, NULL) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_DONE) {
+            const unsigned char *text = sqlite3_column_text(stmt, 0);
+            if (text) strcpy(buffer, (const char*)text);
+        }
+        int rs = sqlite3_finalize(stmt);
+        if(rs != SQLITE_OK) {
+            fprintf(stderr, "Error finalizing statement: %s\n", sqlite3_errstr(rs));
+            sqlite3_close(*pdb);
+            exit(EXIT_FAILURE);
+        }
+        
+    }
     if (sqlite3_errcode(*pdb) != SQLITE_OK) {
         fprintf(stderr, "Error executing test query: %s\n", sqlite3_errmsg(*pdb));
         sqlite3_close(*pdb);
         exit(EXIT_FAILURE);
     }
+    printf("Test query output: %s\n", buffer);
     printf("Database opened successfully in read/write mode.\n");
 }
