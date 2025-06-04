@@ -5,6 +5,7 @@
 #include "db.h"
 #include "orders.h"
 #include "product.h"
+#include "clients.h"
 
 void db_init(sqlite3 **pdb)
 {
@@ -60,15 +61,20 @@ void CreateOrder(sqlite3 *db)
     Product product = {
         .id = 0, // Assuming 0 means no specific ID
         .name = NULL};
-
+    // This is not a great solution, because the product_ptr will be overwritten with allocated memory
+    // TODO: fix product prompting to just take pointer to allocated memory, then reallocate instead
     Product *product_ptr = &product;
     int product_res = PromptUserForProduct(db, &product_ptr);
     if (product_res == 0)
     {
+        FreeProduct(product_ptr);
+        FreeMemory((void **)&product_ptr);
         return;
     }
     else if (product_res < 0)
     {
+        FreeProduct(product_ptr);
+        FreeMemory((void **)&product_ptr);
         fprintf(stderr, "Error retrieving product: %d\n", product_res);
         return;
     }
@@ -77,7 +83,58 @@ void CreateOrder(sqlite3 *db)
         fprintf(stderr, "Product selection returned non-succesful result: %s >> %s\n", sqlite3_errstr(product_res), sqlite3_errmsg(db));
     }
 
-    printf("DEBUG>>> "); PrintProduct(product_ptr);
+    // Initialize client
+    Client client = {
+        .id = 0, // Assuming 0 means no specific ID
+        .first_name = NULL,
+        .last_name = NULL};
+    Client *client_ptr = &client;
+    // Note: client_ptr will be overwritten with allocated memory
+    // TODO: allocate memory here instead, idk why I did it like this initally
+    int client_res = PromptUserForClient(db, &client_ptr);
+    if (client_res == 0)
+    {
+        FreeProduct(product_ptr);
+        FreeMemory((void **)&product_ptr);
+        FreeClient(client_ptr);
+        FreeMemory((void **)&client_ptr);
+        return;
+    }
+    else if (client_res < 0)
+    {
+        fprintf(stderr, "Error retrieving client: %d\n", client_res);
+        FreeProduct(product_ptr);
+        FreeMemory((void **)&product_ptr);
+        FreeClient(client_ptr);
+        FreeMemory((void **)&client_ptr);
+        return;
+    }
+    else if(client_res != 1)
+    {
+        fprintf(stderr, "Client selection returned non-succesful result: %s >> %s\n", sqlite3_errstr(client_res), sqlite3_errmsg(db));
+    }
+
+    // Insert order
+    Order order = {
+        .id = 0, // Will be set by the database
+        .client_id = client_ptr->id,
+        .product_id = product_ptr->id,
+        .amount = 1 // Default amount, can be modified later
+    };
+    int order_res = InsertOrder(db, &order);
+    if(order_res != SQLITE_DONE)
+    {
+        fprintf(stderr, "Error inserting order: %s >> %s\n", sqlite3_errstr(order_res), sqlite3_errmsg(db));
+    }
+    else
+    {
+        printf("Order created successfully with ID: %d\n", order.id);
+    }
+    // Free resources
+    FreeProduct(product_ptr);
+    FreeMemory((void **)&product_ptr);
+    FreeClient(client_ptr);
+    FreeMemory((void **)&client_ptr);
 }
 
 /**

@@ -157,13 +157,13 @@ int GetMatchedProducts(sqlite3 *db, Product *searchProduct, GenericWrapper *prod
     int count = 0;
     int allocated = 4; // Initial allocation size
     Product *products = malloc(allocated * sizeof(Product));
-    Product *tempProduct = NULL;
     if (!products)
     {
         fprintf(stderr, "Memory allocation failed.\n");
         sqlite3_finalize(stmt);
         exit(EXIT_FAILURE);
     }
+    Product *tempProduct = NULL;
 
     while ((rs = sqlite3_step(stmt)) == SQLITE_ROW)
     {
@@ -227,6 +227,11 @@ int GetMatchedProducts(sqlite3 *db, Product *searchProduct, GenericWrapper *prod
 int PromptUserForProduct(sqlite3 *db, Product **outProduct)
 {
     GenericWrapper *productWrapper = malloc(sizeof(GenericWrapper));
+    if(productWrapper == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed for product wrapper.\n");
+        exit(EXIT_FAILURE);
+    }
     InitProductWrapper(productWrapper);
     // First get the product name from the user
     char product_name[128];
@@ -266,11 +271,13 @@ int PromptUserForProduct(sqlite3 *db, Product **outProduct)
         // Read the product ID from user input
         scanf("%d", &productId);
         // Clear the input buffer
-        while (getchar() != '\n' && getchar() != EOF)
-            ;
+        while (getchar() != '\n' && getchar() != EOF);
         if (productId == 0)
         {
             printf("Product selection cancelled.\n");
+            FreeProduct(&product); // Free the product name
+            FreeWrapper(productWrapper); // Free the wrapper after use
+            FreeMemory((void **)&productWrapper);
             return 0; // User cancelled the selection
         }
 
@@ -295,6 +302,8 @@ int PromptUserForProduct(sqlite3 *db, Product **outProduct)
                 printf("Selected product: ");
                 PrintProduct(newPProduct);
                 FreeWrapper(productWrapper); // Free the wrapper after use
+                FreeMemory((void **)&productWrapper); // Free the product name
+                FreeProduct(&product);
                 // FreeMemory((void **)&productWrapper);
                 return 1; // Successfully selected a product
             }

@@ -26,7 +26,7 @@ typedef struct {
 int GetProduct(sqlite3 *db, Product *product);
 
 /**
- * @brief Convenience function to retrieve a product by its ID. Note that it uses GetProduct internally.
+ * @brief Convenience function to retrieve a product by only its ID
  * @param db Pointer to the SQLite database connection.
  * @param productId The ID of the product to retrieve.
  * @param product Pointer to a Product structure that will be filled with the retrieved data.

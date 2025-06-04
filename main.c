@@ -45,19 +45,7 @@ int main(void)
         }
     }
 
-    // Product product = {
-    //     .id = 1,
-    //     . name = NULL
-    // };
-
-    // GetProduct(db, &product);
-    // if (product.name[0] != '\0') {
-    //     printf("Product found: ID = %d, Name = %s\n", product.id, product.name);
-    // } else {
-    //     printf("No product found with ID = %d\n", product.id);
-    // }
-    // sqlite3_close(db);
-    // printf("Database connection closed.\n");
+    sqlite3_close(db); // Close the database connection
 
     return 0;
 }

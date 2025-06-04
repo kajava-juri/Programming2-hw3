@@ -9,7 +9,7 @@
 # compiles all .c files in the current directory to build directory
 
 CC = gcc
-CFLAGS = -Wall -Wextra -g -MMD
+CFLAGS = -Wall -Wextra -g -MMD -fanalyzer -fsanitize=address
 LDFLAGS = -lsqlite3 -lc
 BUILD_DIR = build
 TARGET = $(BUILD_DIR)/hw3
