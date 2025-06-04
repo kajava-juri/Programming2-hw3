@@ -137,15 +137,56 @@ void CreateOrder(sqlite3 *db)
     FreeMemory((void **)&client_ptr);
 }
 
-/**
- * @brief Frees resources associated with a wrapper object.
- *
- * This function deallocates memory and releases any resources that were
- * allocated by the wrapper.
- *
- * @param wrapper Pointer to the wrapper object to be freed.
- * @return void
- */
+void UpdateOrder(sqlite3 *db)
+{
+    Order order = {
+        .id = 0, // Will be set by the user
+        .client_id = 0,
+        .product_id = 0,
+        .amount = 0 // Default amount, can be modified later
+    };
+    int order_res = PromptUserForOrder(db, &order);
+    if (order_res == 0)
+    {
+        printf("Order selection cancelled.\n");
+        return;
+    }
+    else if (order_res < 0)
+    {
+        fprintf(stderr, "Error retrieving order: %d\n", order_res);
+        return;
+    }
+    else if(order_res != 1)
+    {
+        fprintf(stderr, "Order selection returned non-succesful result: %s >> %s\n", sqlite3_errstr(order_res), sqlite3_errmsg(db));
+    }
+
+    printf("Current order details:\n");
+    PrintOrder(&order);
+
+    // Prompt user for new amount
+    printf("Enter new amount for the order (current: %d): ", order.amount);
+    int new_amount;
+    while(scanf("%d", &new_amount) != 1 || new_amount <= 0)
+    {
+        printf("Invalid amount. Please enter a positive integer: ");
+        while (getchar() != '\n'); // Clear the input buffer
+    }
+    order.amount = new_amount;
+
+    int rs = ModifyOrder(db, &order);
+    if(rs != SQLITE_DONE)
+    {
+        fprintf(stderr, "Error modifying order: %s >> %s\n", sqlite3_errstr(rs), sqlite3_errmsg(db));
+    }
+    else
+    {
+        printf("Order modified successfully.\n");
+    }
+
+    // No need to free order, since it stores integers that are not dynamically allocated
+}
+
 void FreeWrapper(GenericWrapper *wrapper)
 {
     if (wrapper == NULL)

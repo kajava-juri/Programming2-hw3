@@ -19,5 +19,13 @@ typedef struct {
  */
 int InsertOrder(sqlite3 *db, Order *order);
 
+int GetOrderById(sqlite3* db, int orderId, Order *order);
+int PromptUserForOrder(sqlite3 *db, Order *order);
+void PrintOrder(Order *order);
+void PrintOrdersGroupedByClient(sqlite3 *db);
+void PrintAllOrdersByClientOrderCount(sqlite3 *db);
+void PrintCheapestOffersForAllClientOrders(sqlite3 *db);
+int ModifyOrder(sqlite3 *db, Order *order);
+int DeleteOrder(sqlite3 *db, int orderId);
 
 #endif // ORDERS_H

@@ -22,23 +22,32 @@ int main(void)
         switch (option) // Use option as the switch expression
         {
         case 1:
-            // Product product = {
-            //     .id = 0, // Assuming 0 means no specific ID
-            //     .name = {0}};
-            // GenericWrapper pw;
-            // InitProductWrapper(&pw);
-            // PromptUserForProduct(db, &pw, &product);
             CreateOrder(db);
             break;
 
         case 2:
-
+            UpdateOrder(db);
             break;
 
         case 3:
-
+            Order order = {0};
+            PromptUserForOrder(db, &order);
+            int rs = DeleteOrder(db, order.id);
+            if(rs & (SQLITE_OK | SQLITE_DONE))
+            {
+                printf("Order with ID %d deleted successfully.\n", order.id);
+            }
+            
             break;
-
+        case 4:
+            PrintOrdersGroupedByClient(db);
+            break;
+        case 5:
+            PrintAllOrdersByClientOrderCount(db);
+            break;
+        case 6:
+            PrintCheapestOffersForAllClientOrders(db);
+            break;
         default:
 
             break;

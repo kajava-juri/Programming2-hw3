@@ -16,8 +16,20 @@ typedef struct {
 } GenericWrapper;
 
 void db_init(sqlite3 **pdb);
+
+/**
+ * @brief Frees resources associated with a wrapper object.
+ *
+ * This function deallocates memory and releases any resources that were
+ * allocated by the wrapper.
+ *
+ * @param wrapper Pointer to the wrapper object to be freed.
+ * @return void
+ */
 void FreeWrapper(GenericWrapper *wrapper);
+
 void FreeMemory(void **p);
 void CreateOrder(sqlite3 *db);
+void UpdateOrder(sqlite3 *db);
 
 #endif // DB_H
