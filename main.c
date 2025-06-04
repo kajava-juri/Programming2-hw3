@@ -51,6 +51,9 @@ int main(void)
         case 7:
             FindCheapestShopPerClient(db);
             break;
+        case 8:
+            PrintPotentialSavingsPerClient(db);
+            break;
         default:
 
             break;

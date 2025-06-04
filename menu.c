@@ -16,6 +16,7 @@ void DisplayMenu()
     printf("5. Print clients by order count\n");
     printf("6. Print clients' orders with cheapest offer\n");
     printf("7. Find cheapest shop per client\n");
+    printf("8. Print potential savings per client\n");
     printf("0. Exit\n");
 }
 
@@ -24,7 +25,7 @@ int GetMenuSelection()
     DisplayMenu();
 
     int menuOption;
-    int maxOption = 7; // Maximum option number
+    int maxOption = 8; // Maximum option number
     do
     {
         printf("  Select an option (1-...): ");

@@ -189,14 +189,19 @@ int PromptUserForOrder(sqlite3 *db, Order *order)
         return -1;
     }
 
-    printf("Enter order ID: ");
+    printf("Enter order ID (0 to cancel): ");
     int orderId;
-    while ((scanf("%d", &orderId) != 1) || (orderId <= 0))
+    while (((scanf("%d", &orderId) != 1) || (orderId < 0)) && orderId != 0)
     {
         printf("Invalid order ID. Please enter a positive integer: ");
         // Clear the input buffer
-        while (getchar() != '\n' && getchar() != EOF)
-            ;
+        while (getchar() != '\n' && getchar() != EOF);
+    }
+
+    if(orderId == 0)
+    {
+        printf("Order selection cancelled.\n");
+        return 0; // User cancelled the selection
     }
 
     order->id = orderId;
@@ -443,7 +448,7 @@ void FindCheapestShopPerClient(sqlite3 *db)
         const unsigned char *firstName = sqlite3_column_text(stmt, 1);
         const unsigned char *lastName = sqlite3_column_text(stmt, 2);
 
-        //printf("CHECKING SHOP: %s for client %d\n", shopName, clientId);
+        // printf("CHECKING SHOP: %s for client %d\n", shopName, clientId);
 
         if (clientId != currentClientId)
         {
@@ -472,7 +477,6 @@ void FindCheapestShopPerClient(sqlite3 *db)
                 strcpy(bestShopName, (const char *)shopName);
             }
         }
-
     }
 
     if (currentClientId != -1)
@@ -481,7 +485,103 @@ void FindCheapestShopPerClient(sqlite3 *db)
                currentFirstName, currentLastName, currentClientId, bestShopId, minCost, bestShopName);
     }
 
-    if(rs != SQLITE_DONE)
+    if (rs != SQLITE_DONE)
+    {
+        fprintf(stderr, "Error executing statement: %s - %s\n", sqlite3_errstr(rs), sqlite3_errmsg(db));
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+void PrintPotentialSavingsPerClient(sqlite3 *db)
+{
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT cl.id AS client_id, cl.first_name, cl.last_name, sh.id AS shop_id, SUM(off.price * o.amount) AS total_cost_for_shop, "
+                      "sh.name AS shop_name, COUNT(o.id) AS orders_count "
+                      "FROM clients AS cl "
+                      "INNER JOIN orders AS o ON o.client_id = cl.id "
+                      "LEFT JOIN products AS prd ON prd.id = o.product_id "
+                      "LEFT JOIN offers AS off ON off.product_id = prd.id "
+                      "LEFT JOIN shops AS sh ON sh.id = off.shop_id "
+                      "GROUP BY sh.id, cl.id "
+                      "ORDER BY cl.id ";
+
+    int currentClientId = -1;
+    double minCost = 0.0;
+    double maxCost = 0.0;
+    int bestShopId = -1;
+    int worstShopId = -1;
+    char bestShopName[128] = "";
+    char worstShopName[128] = "";
+    char currentFirstName[128] = "";
+    char currentLastName[128] = "";
+
+    int rs;
+    if ((rs = sqlite3_prepare_v2(db, (const char *)sql, -1, &stmt, NULL)) != SQLITE_OK)
+    {
+        fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    printf("\n=== Potential savings per client (best price vs wors price) ===\n");
+    while ((rs = sqlite3_step(stmt)) == SQLITE_ROW)
+    {
+        int clientId = sqlite3_column_int(stmt, 0);
+        int shopId = sqlite3_column_int(stmt, 3);
+        double totalCost = sqlite3_column_double(stmt, 4);
+        const unsigned char *shopName = sqlite3_column_text(stmt, 5);
+        const unsigned char *firstName = sqlite3_column_text(stmt, 1);
+        const unsigned char *lastName = sqlite3_column_text(stmt, 2);
+
+        if (clientId != currentClientId)
+        {
+            // Print previous client
+            if (currentClientId != -1)
+            {
+                double potentialSavings = maxCost - minCost;
+                printf("Client %s %s (ID %d) could save %.2f € by choosing shop ID %d (%s) instead of shop ID %d (%s)\n",
+                       currentFirstName, currentLastName, currentClientId, potentialSavings,
+                       bestShopId, bestShopName, worstShopId, worstShopName);
+            }
+
+            // Reset for new client
+            currentClientId = clientId;
+            minCost = totalCost;
+            maxCost = totalCost;
+            bestShopId = shopId;
+            worstShopId = shopId;
+            strcpy(currentFirstName, (const char *)firstName);
+            strcpy(currentLastName, (const char *)lastName);
+            strcpy(bestShopName, (const char *)shopName);
+            strcpy(worstShopName, (const char *)shopName);
+        }
+        else
+        {
+            // Same client - check if this shop is cheaper
+            if (totalCost < minCost)
+            {
+                minCost = totalCost;
+                bestShopId = shopId;
+                strcpy(bestShopName, (const char *)shopName);
+            }
+            else if (totalCost > maxCost)
+            {
+                maxCost = totalCost;
+                worstShopId = shopId;
+                strcpy(worstShopName, (const char *)shopName);
+            }
+        }
+    }
+
+    // Print the last client's info
+    if (currentClientId != -1)
+    {
+        double potentialSavings = maxCost - minCost;
+        printf("Client %s %s (ID %d) could save %.2f € by choosing shop ID %d (%s) instead of shop ID %d (%s)\n",
+               currentFirstName, currentLastName, currentClientId, potentialSavings,
+               bestShopId, bestShopName, worstShopId, worstShopName);
+    }
+
+    if (rs != SQLITE_DONE)
     {
         fprintf(stderr, "Error executing statement: %s - %s\n", sqlite3_errstr(rs), sqlite3_errmsg(db));
     }

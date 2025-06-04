@@ -388,7 +388,7 @@ int PromptUserForClient(sqlite3 *db, Client **outClient)
         // If we reach here, it means the client ID was not found in the fetched products
         // promt the user if he wants to search the database
         printf("Client with ID %d not found in the fetched clients.\n", clientId);
-        printf("Do you want to search the database for this product? (y/n): ");
+        printf("Do you want to search the database for this client? (y/n): ");
         char choice;
         scanf(" %c", &choice);
         // Clear the input buffer

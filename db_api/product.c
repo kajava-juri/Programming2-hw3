@@ -235,7 +235,7 @@ int PromptUserForProduct(sqlite3 *db, Product **outProduct)
     InitProductWrapper(productWrapper);
     // First get the product name from the user
     char product_name[128];
-    printf("Search for products by name: ");
+    printf("\nSearch for products by name: ");
 
     // Read exactly product_name size of bytes from user
     // fgets prevents buffer overflow
@@ -266,7 +266,7 @@ int PromptUserForProduct(sqlite3 *db, Product **outProduct)
             PrintProduct(pProduct);
         }
         printf("Found %zu products matching '%s':\n", productWrapper->used, product.name);
-        printf("Type ID of the product you want to select or 0 to cancel: ");
+        printf("\nType ID of the product you want to select or 0 to cancel: ");
         int productId;
         // Read the product ID from user input
         scanf("%d", &productId);
@@ -316,12 +316,11 @@ int PromptUserForProduct(sqlite3 *db, Product **outProduct)
         // If we reach here, it means the product ID was not found in the fetched products
         // promt the user if he wants to search the database
         printf("Product with ID %d not found in the fetched products.\n", productId);
-        printf("Do you want to search the database for this product? (y/n): ");
+        printf("\nDo you want to search the database for this product? (y/n): ");
         char choice;
         scanf(" %c", &choice);
         // Clear the input buffer
-        while (getchar() != '\n' && getchar() != EOF)
-            ;
+        while (getchar() != '\n' && getchar() != EOF);
         if (tolower(choice) == 'n')
         {
             printf("Product selection cancelled.\n");

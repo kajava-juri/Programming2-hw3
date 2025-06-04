@@ -67,8 +67,6 @@ void CreateOrder(sqlite3 *db)
     int product_res = PromptUserForProduct(db, &product_ptr);
     if (product_res == 0)
     {
-        FreeProduct(product_ptr);
-        FreeMemory((void **)&product_ptr);
         return;
     }
     else if (product_res < 0)
@@ -165,12 +163,12 @@ void UpdateOrder(sqlite3 *db)
         fprintf(stderr, "Error retrieving order: %d\n", order_res);
         return;
     }
-    else if(order_res != 1)
+    else if(!(order_res & (SQLITE_ROW | SQLITE_DONE)))
     {
         fprintf(stderr, "Order selection returned non-succesful result: %s >> %s\n", sqlite3_errstr(order_res), sqlite3_errmsg(db));
     }
 
-    printf("Current order details:\n");
+    printf("\nCurrent order details:\n");
     PrintOrder(&order);
 
     // Prompt user for new amount

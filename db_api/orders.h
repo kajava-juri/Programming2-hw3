@@ -25,6 +25,7 @@ void PrintOrder(Order *order);
 void PrintOrdersGroupedByClient(sqlite3 *db);
 void PrintAllOrdersByClientOrderCount(sqlite3 *db);
 void PrintCheapestOffersForAllClientOrders(sqlite3 *db);
+void PrintPotentialSavingsPerClient(sqlite3 *db);
 void FindCheapestShopPerClient(sqlite3 *db);
 int ModifyOrder(sqlite3 *db, Order *order);
 int DeleteOrder(sqlite3 *db, int orderId);
