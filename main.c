@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sqlite3.h>
+#include <string.h>
 #include "db_api/db.h"
 #include "main.h"
 #include "db_api/product.h"
@@ -21,13 +22,13 @@ int main(void)
         switch (option) // Use option as the switch expression
         {
         case 1:
-            Product product = {
-                .id = 0, // Assuming 0 means no specific ID
-                .name = {0}};
-            GenericWrapper pw;
-            InitProductWrapper(&pw);
-            PromptUserForProduct(db, &pw, &product);
-            // CreateOrder(&db);
+            // Product product = {
+            //     .id = 0, // Assuming 0 means no specific ID
+            //     .name = {0}};
+            // GenericWrapper pw;
+            // InitProductWrapper(&pw);
+            // PromptUserForProduct(db, &pw, &product);
+            CreateOrder(db);
             break;
 
         case 2:
@@ -59,4 +60,11 @@ int main(void)
     // printf("Database connection closed.\n");
 
     return 0;
+}
+
+char *strdup(const char *src) {
+    char *dst = malloc(strlen (src) + 1);  // Space for length plus nul
+    if (dst == NULL) return NULL;          // No memory
+    strcpy(dst, src);                      // Copy the characters
+    return dst;                            // Return the new string
 }

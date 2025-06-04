@@ -10,7 +10,7 @@
 
 CC = gcc
 CFLAGS = -Wall -Wextra -g -MMD
-LDFLAGS = -lsqlite3
+LDFLAGS = -lsqlite3 -lc
 BUILD_DIR = build
 TARGET = $(BUILD_DIR)/hw3
 

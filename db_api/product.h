@@ -6,7 +6,7 @@
 
 typedef struct {
     int id;          // Unique identifier for the product
-    char name[128];  // Name of the product
+    char *name;  // Name of the product
 } Product;
 
 /**
@@ -33,11 +33,18 @@ int GetProduct(sqlite3 *db, Product *product);
  */
 int GetProductById(sqlite3 *db, int productId, Product *product);
 int GetMatchedProducts(sqlite3 *db, Product *searchProduct, GenericWrapper *productWrapper);
-int PromptUserForProduct(sqlite3 *db, GenericWrapper *productWrapper, Product **outProduct);
-void FreeProduct(void **pProduct);
+
+/**
+ * @brief Prompts the user for product details and retrieves matching products from the database for user to select.
+ * @param db Pointer to the SQLite database connection.
+ * @param outProduct Pointer to a Product structure where the selected product will be stored.
+ * 
+ * @returns 1 - if user succesfully selected, 0 - user cancelled, -1 - error or sqlite3 status code.
+ */
+int PromptUserForProduct(sqlite3 *db, Product **outProduct);
+void FreeProduct(void *pProduct);
 void *GetProductAt(void *pWrapper, size_t index);
 void InitProductWrapper(GenericWrapper *wrapper);
-void FreeProduct(void **pProduct);
 void PrintProduct(Product *product);
 
 #endif // PRODUCT_H

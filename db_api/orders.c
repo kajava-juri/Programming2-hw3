@@ -6,6 +6,7 @@
 #include <sqlite3.h>
 #include "orders.h"
 #include "db.h"
+#include "../main.h"
 
 void InitOrdersWrapper(GenericWrapper *wrapper)
 {
@@ -26,7 +27,7 @@ void *GetOrderAt(GenericWrapper *wrapper, size_t index)
     return ((Order *)wrapper->data) + index;
 }
 
-int CreateOrder(sqlite3 *db, Order *order)
+int InsertOrder(sqlite3 *db, Order *order)
 {
 
     // Sanity check for existing order values

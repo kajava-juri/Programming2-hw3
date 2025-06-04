@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "db.h"
+#include "orders.h"
+#include "product.h"
 
 void db_init(sqlite3 **pdb)
 {
@@ -52,12 +54,30 @@ void db_init(sqlite3 **pdb)
     printf("Database name: '%s'\n", buffer);
 }
 
-void EditOrder(sqlite3 *db)
+void CreateOrder(sqlite3 *db)
 {
+    // Initialize product
     Product product = {
         .id = 0, // Assuming 0 means no specific ID
-        .name = {0}};
-    GenericWrapper pw;
+        .name = NULL};
+
+    Product *product_ptr = &product;
+    int product_res = PromptUserForProduct(db, &product_ptr);
+    if (product_res == 0)
+    {
+        return;
+    }
+    else if (product_res < 0)
+    {
+        fprintf(stderr, "Error retrieving product: %d\n", product_res);
+        return;
+    }
+    else if(product_res != 1)
+    {
+        fprintf(stderr, "Product selection returned non-succesful result: %s >> %s\n", sqlite3_errstr(product_res), sqlite3_errmsg(db));
+    }
+
+    printf("DEBUG>>> "); PrintProduct(product_ptr);
 }
 
 /**

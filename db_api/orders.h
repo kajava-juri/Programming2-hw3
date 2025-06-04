@@ -17,7 +17,7 @@ typedef struct {
  * @param order Pointer to an Order structure that contains the order details.
  * @returns sqlite3 result code or -1 on error.
  */
-int CreateOrder(sqlite3 *db, Order *order);
+int InsertOrder(sqlite3 *db, Order *order);
 
 
 #endif // ORDERS_H

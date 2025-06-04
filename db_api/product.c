@@ -5,6 +5,7 @@
 #include <string.h>
 #include "product.h"
 #include "db.h"
+#include "../main.h"
 
 void InitProductWrapper(GenericWrapper *wrapper)
 {
@@ -16,9 +17,14 @@ void InitProductWrapper(GenericWrapper *wrapper)
     wrapper->limit = 0;
 }
 
-void FreeProduct(void **pProduct)
+void FreeProduct(void *pProduct)
 {
-    FreeMemory((void **)pProduct);
+    Product *product = (Product *)pProduct;
+    if (product == NULL)
+    {
+        return; // Nothing to free
+    }
+    FreeMemory((void **)&product->name); // Free the name string
 }
 
 void *GetProductAt(void *pWrapper, size_t index)
@@ -55,7 +61,8 @@ int GetProduct(sqlite3 *db, Product *product)
         const unsigned char *name = sqlite3_column_text(stmt, 1);
         if (name)
         {
-            strncpy(product->name, (const char *)name, sizeof(product->name) - 1);
+            // strncpy(product->name, (const char *)name, sizeof(product->name) - 1);
+            product->name = strdup((const char *)name);
             product->name[sizeof(product->name) - 1] = '\0'; // Ensure null termination
         }
         else
@@ -109,8 +116,8 @@ int GetProductById(sqlite3 *db, int productId, Product *product)
             const unsigned char *name = sqlite3_column_text(stmt, 1);
             if (name)
             {
-                strncpy(product->name, (const char *)name, strlen(name));
-                product->name[sizeof(product->name) - 1] = '\0'; // Ensure null termination
+                // strncpy(product->name, (const char *)name, sizeof(product->name) - 1);
+                product->name = strdup((const char *)name);
             }
             else
             {
@@ -141,6 +148,7 @@ int GetMatchedProducts(sqlite3 *db, Product *searchProduct, GenericWrapper *prod
     {
         // Error preparing statement
         fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+        PrintProduct(searchProduct);
         return rs;
     }
     sqlite3_bind_int(stmt, 1, searchProduct->id);
@@ -185,11 +193,14 @@ int GetMatchedProducts(sqlite3 *db, Product *searchProduct, GenericWrapper *prod
         const unsigned char *name = sqlite3_column_text(stmt, nameIdx);
         if (name)
         {
-            strncpy((products + count)->name, (const char *)name, strlen(name));
+            // strncpy((products + count)->name, (const char *)name, sizeof((products + count)->name) - 1);
+            (products + count)->name = strdup((const char *)name);
+            // null termination?
         }
         else
         {
-            (products + count)->name[0] = '\0'; // Handle NULL case
+            // Handle NULL case
+            (products + count)->name = NULL;
         }
 
         count++;
@@ -213,8 +224,10 @@ int GetMatchedProducts(sqlite3 *db, Product *searchProduct, GenericWrapper *prod
     return rs;
 }
 
-int PromptUserForProduct(sqlite3 *db, GenericWrapper *productWrapper, Product **outProduct)
+int PromptUserForProduct(sqlite3 *db, Product **outProduct)
 {
+    GenericWrapper *productWrapper = malloc(sizeof(GenericWrapper));
+    InitProductWrapper(productWrapper);
     // First get the product name from the user
     char product_name[128];
     printf("Search for products by name: ");
@@ -231,14 +244,15 @@ int PromptUserForProduct(sqlite3 *db, GenericWrapper *productWrapper, Product **
     }
 
     Product product = {
-        .id = 0,    // Assuming 0 means no specific ID
-        .name = {0} // Initialize name to an empty string
+        .id = 0,     // Assuming 0 means no specific ID
+        .name = NULL // Initialize name to an empty string
     };
-    strncpy(product.name, product_name, sizeof(product.name) - 1);
+    // strncpy(product.name, product_name, sizeof(product.name) - 1);
+    product.name = strdup(product_name);
 
     int rs;
-    // Ideally GetProduct would return SQLITE_DONE if all the rows were processed
-    // because SQLITE_ROW means that there are more rows that were found
+    // Get matched products in generic wrapper
+    // do not forhet to free the wrapper after use
     if ((rs = GetMatchedProducts(db, &product, productWrapper)) & (SQLITE_ROW | SQLITE_DONE))
     {
         for (size_t i = 0; i < productWrapper->used; i++)
@@ -266,12 +280,29 @@ int PromptUserForProduct(sqlite3 *db, GenericWrapper *productWrapper, Product **
             Product *pProduct = (Product *)productWrapper->getElementAt(productWrapper, i);
             if (pProduct->id == productId)
             {
-                *outProduct = pProduct; // Set the output product to the selected one
+                // Set the output product to the found one
+                Product *newPProduct = (Product *)malloc(sizeof(Product));
+                if (newPProduct == NULL)
+                {
+                    fprintf(stderr, "Memory allocation failed.\n");
+                    exit(EXIT_FAILURE);
+                }
+                // Copy the found product data
+                newPProduct->id = pProduct->id;
+                newPProduct->name = strdup(pProduct->name);
+
+                *outProduct = newPProduct; // Set the output product to the selected one
                 printf("Selected product: ");
-                PrintProduct(pProduct);
-                return 0; // Successfully selected a product
+                PrintProduct(newPProduct);
+                FreeWrapper(productWrapper); // Free the wrapper after use
+                // FreeMemory((void **)&productWrapper);
+                return 1; // Successfully selected a product
             }
         }
+
+        // ====================================
+        // Note: after this point instead of returning, set 'rs' to the desired value so that it will free the allocated memory in the end
+        // ====================================
 
         // If we reach here, it means the product ID was not found in the fetched products
         // promt the user if he wants to search the database
@@ -285,7 +316,7 @@ int PromptUserForProduct(sqlite3 *db, GenericWrapper *productWrapper, Product **
         if (tolower(choice) == 'n')
         {
             printf("Product selection cancelled.\n");
-            return -1; // User cancelled the selection
+            rs = 0; // User cancelled the selection
         }
         else if (tolower(choice) == 'y')
         {
@@ -293,19 +324,28 @@ int PromptUserForProduct(sqlite3 *db, GenericWrapper *productWrapper, Product **
             rs = GetProductById(db, productId, &product);
             if (rs == SQLITE_ROW)
             {
-                *outProduct = &product; // Set the output product to the found one
+                // Set the output product to the found one
+                Product *newPProduct = (Product *)malloc(sizeof(Product));
+                if (newPProduct == NULL)
+                {
+                    fprintf(stderr, "Memory allocation failed.\n");
+                    exit(EXIT_FAILURE);
+                }
+                newPProduct->id = product.id;
+                newPProduct->name = strdup(product.name);
+
+                *outProduct = newPProduct;
                 printf("Found product: ");
                 PrintProduct(&product);
+                rs = 1; // Successfully selected a product
             }
             else if (rs == SQLITE_DONE)
             {
                 printf("No product found with ID %d.\n", productId);
-                return -1; // No product found
             }
             else
             {
                 fprintf(stderr, "Error searching for product (%d): %s\n", rs, sqlite3_errstr(rs));
-                return rs; // Return the error code
             }
         }
     }
@@ -315,6 +355,8 @@ int PromptUserForProduct(sqlite3 *db, GenericWrapper *productWrapper, Product **
         printf("%s - searched for product '%s'\n", sqlite3_errstr(rs), firstMatchedProduct->name);
     }
 
+    FreeWrapper(productWrapper); // Free the wrapper after use
+    FreeMemory((void **)&productWrapper);
     return rs;
 }
 
