@@ -48,6 +48,9 @@ int main(void)
         case 6:
             PrintCheapestOffersForAllClientOrders(db);
             break;
+        case 7:
+            FindCheapestShopPerClient(db);
+            break;
         default:
 
             break;

@@ -357,7 +357,7 @@ void PrintCheapestOffersForAllClientOrders(sqlite3 *db)
     }
 
     printf("\n=== Cheapest Offers for All Orders ===\n");
-    
+
     // Your implementation here - similar to PrintAllOrdersByClientOrderCount
     // but showing offer details instead of just products
     int currentClientId = -1;
@@ -386,9 +386,9 @@ void PrintCheapestOffersForAllClientOrders(sqlite3 *db)
             currentClientId = clientId;
         }
 
-        if(currentOrderId != orderId)
+        if (currentOrderId != orderId)
         {
-            if(currentOrderId != -1)
+            if (currentOrderId != -1)
             {
                 printf("\n"); // Print a newline before the next order
             }
@@ -404,5 +404,87 @@ void PrintCheapestOffersForAllClientOrders(sqlite3 *db)
     {
         fprintf(stderr, "Error executing statement: %s - %s\n", sqlite3_errstr(rs), sqlite3_errmsg(db));
     }
+    sqlite3_finalize(stmt);
+}
+
+void FindCheapestShopPerClient(sqlite3 *db)
+{
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT cl.id AS client_id, cl.first_name, cl.last_name, sh.id AS shop_id, SUM(off.price * o.amount) AS total_cost_for_shop, "
+                      "sh.name AS shop_name, COUNT(o.id) AS orders_count "
+                      "FROM clients AS cl "
+                      "INNER JOIN orders AS o ON o.client_id = cl.id "
+                      "LEFT JOIN products AS prd ON prd.id = o.product_id "
+                      "LEFT JOIN offers AS off ON off.product_id = prd.id "
+                      "LEFT JOIN shops AS sh ON sh.id = off.shop_id "
+                      "GROUP BY sh.id, cl.id "
+                      "ORDER BY cl.id ";
+
+    int currentClientId = -1;
+    double minCost = 0.0;
+    int bestShopId = -1;
+    char bestShopName[128] = "";
+    char currentFirstName[128] = "";
+    char currentLastName[128] = "";
+
+    int rs;
+    if ((rs = sqlite3_prepare_v2(db, (const char *)sql, -1, &stmt, NULL)) != SQLITE_OK)
+    {
+        fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    printf("\n=== Cheapest Shop per Client ===\n");
+    while ((rs = sqlite3_step(stmt)) == SQLITE_ROW)
+    {
+        int clientId = sqlite3_column_int(stmt, 0);
+        int shopId = sqlite3_column_int(stmt, 3);
+        double totalCost = sqlite3_column_double(stmt, 4);
+        const unsigned char *shopName = sqlite3_column_text(stmt, 5);
+        const unsigned char *firstName = sqlite3_column_text(stmt, 1);
+        const unsigned char *lastName = sqlite3_column_text(stmt, 2);
+
+        //printf("CHECKING SHOP: %s for client %d\n", shopName, clientId);
+
+        if (clientId != currentClientId)
+        {
+            // Print previous client's best shop (if any)
+            if (currentClientId != -1)
+            {
+                printf("Best shop for client %s %s (ID %d): Shop ID %d (%.2f €): %s\n",
+                       currentFirstName, currentLastName, currentClientId, bestShopId, minCost, bestShopName);
+            }
+
+            // Reset for new client
+            currentClientId = clientId;
+            minCost = totalCost;
+            bestShopId = shopId;
+            strcpy(currentFirstName, (const char *)firstName);
+            strcpy(currentLastName, (const char *)lastName);
+            strcpy(bestShopName, (const char *)shopName);
+        }
+        else
+        {
+            // Same client - check if this shop is cheaper
+            if (totalCost < minCost)
+            {
+                minCost = totalCost;
+                bestShopId = shopId;
+                strcpy(bestShopName, (const char *)shopName);
+            }
+        }
+
+    }
+
+    if (currentClientId != -1)
+    {
+        printf("Best shop for client %s %s (ID %d): Shop ID %d (%.2f €): %s\n",
+               currentFirstName, currentLastName, currentClientId, bestShopId, minCost, bestShopName);
+    }
+
+    if(rs != SQLITE_DONE)
+    {
+        fprintf(stderr, "Error executing statement: %s - %s\n", sqlite3_errstr(rs), sqlite3_errmsg(db));
+    }
+
     sqlite3_finalize(stmt);
 }

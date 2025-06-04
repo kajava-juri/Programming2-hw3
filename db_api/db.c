@@ -114,12 +114,21 @@ void CreateOrder(sqlite3 *db)
         fprintf(stderr, "Client selection returned non-succesful result: %s >> %s\n", sqlite3_errstr(client_res), sqlite3_errmsg(db));
     }
 
+    // Prompt user for order amount
+    printf("Enter amount for the order: ");
+    int amount = 1; // Default amount
+    while(scanf("%d", &amount) != 1 || amount <= 0)
+    {
+        printf("Invalid amount. Please enter a positive integer: ");
+        while (getchar() != '\n'); // Clear the input buffer
+    }
+
     // Insert order
     Order order = {
         .id = 0, // Will be set by the database
         .client_id = client_ptr->id,
         .product_id = product_ptr->id,
-        .amount = 1 // Default amount, can be modified later
+        .amount = amount // Default amount, can be modified later
     };
     int order_res = InsertOrder(db, &order);
     if(order_res != SQLITE_DONE)
