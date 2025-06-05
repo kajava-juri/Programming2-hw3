@@ -28,7 +28,7 @@ int GetMenuSelection()
     int maxOption = 8; // Maximum option number
     do
     {
-        printf("  Select an option (1-...): ");
+        printf("  Select an option (1-8): ");
         scanf("%d", &menuOption);
         if (menuOption < 0 || menuOption > maxOption)
         {

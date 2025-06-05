@@ -32,6 +32,15 @@ int GetProduct(sqlite3 *db, Product *product);
  * @param product Pointer to a Product structure that will be filled with the retrieved data.
  */
 int GetProductById(sqlite3 *db, int productId, Product *product);
+
+/**
+ * @brief Retrieves products that match the search criteria from the database.
+ * @param db Pointer to the SQLite database connection.
+ * @param searchProduct Pointer to a Product structure containing search criteria.
+ * @param productWrapper Pointer to a GenericWrapper structure where matched products will be stored.
+ * 
+ * @returns sqlite3 result code or -1 on error.
+ */
 int GetMatchedProducts(sqlite3 *db, Product *searchProduct, GenericWrapper *productWrapper);
 
 /**
