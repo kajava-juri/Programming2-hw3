@@ -15,6 +15,10 @@ typedef struct {
     size_t limit;
 } GenericWrapper;
 
+/**
+ * @brief Initializes the SQLite database connection.
+ * @param pdb Pointer to a pointer that will hold the database connection.
+ */
 void db_init(sqlite3 **pdb);
 
 /**
@@ -28,8 +32,22 @@ void db_init(sqlite3 **pdb);
  */
 void FreeWrapper(GenericWrapper *wrapper);
 
+/**
+ * @brief Frees memory pointed to by a pointer and sets the pointer to NULL.
+ * @param p Pointer to a pointer that will be freed and set to NULL.
+ */
 void FreeMemory(void **p);
+
+/**
+ * @brief Creates a new order by prompting the user and inserting it into the database.
+ * @param db Pointer to the SQLite database connection.
+ */
 void CreateOrder(sqlite3 *db);
+
+/**
+ * @brief Updates an existing order by prompting the user for modifications.
+ * @param db Pointer to the SQLite database connection.
+ */
 void UpdateOrder(sqlite3 *db);
 
 #endif // DB_H

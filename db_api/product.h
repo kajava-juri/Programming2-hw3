@@ -51,9 +51,31 @@ int GetMatchedProducts(sqlite3 *db, Product *searchProduct, GenericWrapper *prod
  * @returns 1 - if user succesfully selected, 0 - user cancelled, -1 - error or sqlite3 status code.
  */
 int PromptUserForProduct(sqlite3 *db, Product **outProduct);
+
+/**
+ * @brief Frees memory allocated for a Product structure.
+ * @param pProduct Pointer to the Product structure to be freed.
+ */
 void FreeProduct(void *pProduct);
+
+/**
+ * @brief Gets a product at the specified index from a wrapper.
+ * @param pWrapper Pointer to the wrapper containing products.
+ * @param index The index of the product to retrieve.
+ * @returns Pointer to the Product at the specified index, or NULL if index is out of bounds.
+ */
 void *GetProductAt(void *pWrapper, size_t index);
+
+/**
+ * @brief Initializes a GenericWrapper for handling Product structures.
+ * @param wrapper Pointer to the GenericWrapper to initialize.
+ */
 void InitProductWrapper(GenericWrapper *wrapper);
+
+/**
+ * @brief Prints the details of a single product to the console.
+ * @param product Pointer to the Product structure to print.
+ */
 void PrintProduct(Product *product);
 
 #endif // PRODUCT_H
